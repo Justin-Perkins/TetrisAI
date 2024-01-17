@@ -1,4 +1,9 @@
 *.png
+
+*.gbc
+*.gbc.ram
+*.gbc.state
+
 *.gb
 *.gb.ram
 *.gb.state
