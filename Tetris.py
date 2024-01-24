@@ -2,6 +2,7 @@ import os
 import sys
 
 from pyboy import PyBoy, WindowEvent
+from pyboy.openai_gym import PyBoyGymEnv
 
 quiet = "--quiet" in sys.argv
 pyboy = PyBoy("Tetris.gb", game_wrapper=True)
@@ -9,9 +10,9 @@ pyboy = PyBoy("Tetris.gb", game_wrapper=True)
 assert pyboy.cartridge_title() == "TETRIS"
 
 tetris = pyboy.game_wrapper()
-tetris.start_game()
+gym = PyBoyGymEnv(pyboy, observation_type="tiles", action_type="press")
 
-print(tetris)
+tetris.start_game()
 
 pyboy.send_input(WindowEvent.PRESS_BUTTON_A)
 pyboy.tick()
