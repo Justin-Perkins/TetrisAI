@@ -7,3 +7,5 @@
 *.gb
 *.gb.ram
 *.gb.state
+
+*.pyc
