@@ -174,9 +174,9 @@ class AgentNet(nn.Module):
         super().__init__()
         c, h, w = input_dim
 
-        if h != 32:
+        if h != 18:
             raise ValueError(f"Expecting input height: 32, got: {h}")
-        if w != 32:
+        if w != 10:
             raise ValueError(f"Expecting input width: 32, got: {w}")
 
         self.online = self.__build_cnn(c, output_dim)

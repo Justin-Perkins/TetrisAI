@@ -27,7 +27,7 @@ print()
 save_dir = Path("checkpoints") / datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 save_dir.mkdir(parents=True)
 
-agent = Agent(state_dim=(1, 32, 32), action_dim=gym.action_space.n, save_dir=save_dir)
+agent = Agent(state_dim=(1, 18, 10), action_dim=gym.action_space.n, save_dir=save_dir)
 
 logger = MetricLogger(save_dir)
 
