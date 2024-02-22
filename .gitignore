@@ -9,3 +9,7 @@
 *.gb.state
 
 *.pyc
+
+*.txt
+
+checkpoints/*

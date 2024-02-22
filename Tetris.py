@@ -1,14 +1,15 @@
-import os
 import sys
 
+from pathlib import Path
 import datetime
 
 from pyboy import PyBoy, WindowEvent
 from TetrisPyBoyGymEnv import CustomPyBoyGymEnv
 
 import torch
-import torch.nn as nn
-from torch.distributions.normal import Normal
+
+from Logging import MetricLogger
+from Agent import Agent
 
 quiet = "--quiet" in sys.argv
 pyboy = PyBoy("Tetris.gb", game_wrapper=True)
@@ -17,7 +18,18 @@ assert pyboy.cartridge_title() == "TETRIS"
 
 tetris = pyboy.game_wrapper()
 
-gym = CustomPyBoyGymEnv(pyboy, observation_type="tiles", action_type="press")
+gym = CustomPyBoyGymEnv(pyboy, observation_type="tiles", action_type="all")
+
+use_cuda = torch.cuda.is_available()
+print(f"Using CUDA: {use_cuda}")
+print()
+
+save_dir = Path("checkpoints") / datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+save_dir.mkdir(parents=True)
+
+agent = Agent(state_dim=(1, 32, 32), action_dim=gym.action_space.n, save_dir=save_dir)
+
+logger = MetricLogger(save_dir)
 
 # Also resets/starts the game through the wrapper
 observation = gym.reset()
@@ -30,34 +42,37 @@ print(f"NUMBER OF ACTIONS: {number_actions}")
 
 pyboy.set_emulation_speed(1)
 
-pyboy.send_input(WindowEvent.PRESS_BUTTON_A)
-pyboy.tick()
-pyboy.send_input(WindowEvent.RELEASE_BUTTON_A)
+episodes = 40
+for e in range(episodes):
 
-number_iterations = 0
+    state = gym.reset()
 
-now = datetime.datetime.now()
+    # Play the game!
+    while True:
 
-scores = open("Scores.txt", "a")
-scores.write(f"\nSCORES FOR {now}:")
-scores.close()
+        # Run agent on the state
+        action = agent.act(state)
 
+        # Agent performs action
+        next_state, reward, done, trunc, info = gym.step(action)
 
-while not pyboy.tick():
-    for _ in range(10):
-        pyboy.tick()
+        # Remember
+        agent.cache(state, next_state, action, reward, done)
 
-    action = gym.action_space.sample()  # agent policy that uses the observation and info
-    observation, reward, done, info = gym.step(action)
+        # Learn
+        q, loss = agent.learn()
 
-    if tetris.game_over():
-        
-        print(tetris.score)
+        # Logging
+        logger.log_step(reward, loss, q)
 
-        scores = open("Scores.txt", "a")
-        scores.write(f"\n{tetris.score}")
-        scores.close()
+        # Update state
+        state = next_state
 
-        observation = gym.reset()
-    
-    pass
+        # Check if end of game
+        if done:
+            break
+
+    logger.log_episode()
+
+    if (e % 20 == 0) or (e == episodes - 1):
+        logger.record(episode=e, epsilon=agent.exploration_rate, step=agent.curr_step)
