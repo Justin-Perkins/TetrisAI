@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 import datetime
 
-from pyboy import PyBoy, WindowEvent
+from pyboy import PyBoy
 from TetrisPyBoyGymEnv import CustomPyBoyGymEnv
 
 import torch
@@ -27,7 +27,7 @@ print()
 save_dir = Path("checkpoints") / datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 save_dir.mkdir(parents=True)
 
-agent = Agent(state_dim=(18, 10), action_dim=gym.action_space.n, save_dir=save_dir)
+agent = Agent(state_dim=(18, 10), action_dim=gym.action_space.n, save_dir=save_dir, load_checkpoint="checkpoints\\2024-02-23T12-34-15\\agent_net_12.chkpt")
 
 logger = MetricLogger(save_dir)
 
@@ -40,10 +40,11 @@ number_actions = gym.action_space.n
 # Confirm reduced number of actions
 print(f"NUMBER OF ACTIONS: {number_actions}")
 
-pyboy.set_emulation_speed(1)
+pyboy.set_emulation_speed(0)
 
-episodes = 40
+episodes = 400000
 for e in range(episodes):
+    print(f"EPISODE: {e}")
 
     state = gym.reset()
 
@@ -74,5 +75,5 @@ for e in range(episodes):
 
     logger.log_episode()
 
-    if (e % 20 == 0) or (e == episodes - 1):
+    if (e % 40 == 0) or (e == episodes - 1):
         logger.record(episode=e, epsilon=agent.exploration_rate, step=agent.curr_step)

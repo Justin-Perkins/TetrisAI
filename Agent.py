@@ -11,14 +11,14 @@ from tensordict import TensorDict
 from torchrl.data import TensorDictReplayBuffer, LazyMemmapStorage
 
 class Agent:
-    def __init__(self, state_dim, action_dim, save_dir):
+    def __init__(self, state_dim, action_dim, save_dir, load_checkpoint=None):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.save_dir = save_dir
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        # Mario's DNN to predict the most optimal action - we implement this in the Learn section
+        # Agents's DNN to predict the most optimal action - we implement this in the Learn section
         self.net = AgentNet(self.state_dim, self.action_dim).float()
         self.net = self.net.to(device=self.device)
 
@@ -39,7 +39,10 @@ class Agent:
         self.learn_every = 3  # no. of experiences between updates to Q_online
         self.sync_every = 1e4  # no. of experiences between Q_target & Q_online sync
 
-        self.save_every = 5e5  # no. of experiences between saving Mario Net
+        self.save_every = 5e5  # no. of experiences between saving Agent Net
+
+        if load_checkpoint:
+            self.load(load_checkpoint)
 
     def act(self, state):
         """
@@ -48,7 +51,7 @@ class Agent:
     Inputs:
     state(``LazyFrame``): A single observation of the current state, dimension is (state_dim)
     Outputs:
-    ``action_idx`` (``int``): An integer representing which action Mario will perform
+    ``action_idx`` (``int``): An integer representing which action Agent will perform
     """
         # EXPLORE
         if np.random.rand() < self.exploration_rate:
@@ -163,6 +166,21 @@ class Agent:
             save_path,
         )
         print(f"AgentNet saved to {save_path} at step {self.curr_step}")
+
+    def load(self, checkpoint_path):
+        checkpoint = torch.load(checkpoint_path)
+        
+        # Adjust keys to handle the architecture difference
+        adjusted_state_dict = {
+            key.replace("online.", "").replace("target.", ""): value
+            for key, value in checkpoint['model'].items()
+        }
+        
+        self.net.online.load_state_dict(adjusted_state_dict)
+        self.net.target.load_state_dict(self.net.online.state_dict())
+        self.exploration_rate = checkpoint['exploration_rate']
+        self.curr_step = checkpoint.get('step', 0)
+
 
 
 class AgentNet(nn.Module):
