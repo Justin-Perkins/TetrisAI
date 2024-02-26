@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 import datetime
 
-from pyboy import PyBoy
+from TetrisPyBoy import CustomPyBoy
 from TetrisPyBoyGymEnv import CustomPyBoyGymEnv
 
 import torch
@@ -12,7 +12,7 @@ from Logging import MetricLogger
 from Agent import Agent
 
 quiet = "--quiet" in sys.argv
-pyboy = PyBoy("Tetris.gb", game_wrapper=True)
+pyboy = CustomPyBoy("Tetris.gb", game_wrapper=True)
 
 assert pyboy.cartridge_title() == "TETRIS"
 
