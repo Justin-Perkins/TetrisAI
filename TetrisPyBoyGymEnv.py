@@ -1,6 +1,8 @@
 from pyboy.openai_gym import PyBoyGymEnv
 from pyboy import WindowEvent
 
+import numpy as np
+
 try:
     from gym.spaces import Discrete
     enabled = True
@@ -38,6 +40,21 @@ class CustomPyBoyGymEnv(PyBoyGymEnv):
         # Update the action_space
         self.action_space = Discrete(len(self.actions))
 
+    def calculate_density(self):
+        highest_block = self.get_highest_block_below_piece()
+        occupied_tiles = np.sum(self.game_wrapper.game_area()[:highest_block, :] != 47)
+        total_tiles = highest_block * self.game_wrapper.shape[1]
+        self.density = occupied_tiles / total_tiles
+
+    def get_highest_block_below_piece(self):
+        highest_block = 0
+        for col in range(self.game_wrapper.shape[1]):
+            for row in range(self.game_wrapper.shape[0] - 1, -1, -1):
+                if self.game_wrapper.game_area()[row][col] != 47:  # If tile is occupied
+                    highest_block = max(highest_block, row)
+                    break  # Move to the next column once a non-blank tile is found
+        return highest_block
+
     def step(self, action_id):
         info = {}
 
@@ -58,7 +75,13 @@ class CustomPyBoyGymEnv(PyBoyGymEnv):
             if self.action_type == "press":
                 self.pyboy.send_input(self._release_button[action])
 
-        new_fitness = self.game_wrapper.fitness
+        highest_block = self.get_highest_block_below_piece()
+        board_density = self.calculate_density()
+
+        print(f"HIGHEST POINT: {highest_block}")
+        print(f"GAME DENSITY: {board_density}")
+
+        new_fitness = self.game_wrapper.fitness * (board_density + 0.2)
         reward = new_fitness - self.last_fitness
         self.last_fitness = new_fitness
 
@@ -66,3 +89,5 @@ class CustomPyBoyGymEnv(PyBoyGymEnv):
         done = pyboy_done or self.game_wrapper.game_over()
 
         return observation, reward, done, False, info
+    
+    

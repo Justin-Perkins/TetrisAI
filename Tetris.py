@@ -27,7 +27,7 @@ print()
 save_dir = Path("checkpoints") / datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 save_dir.mkdir(parents=True)
 
-agent = Agent(state_dim=(18, 10), action_dim=gym.action_space.n, save_dir=save_dir, load_checkpoint="checkpoints\\2024-02-23T12-34-15\\agent_net_12.chkpt")
+agent = Agent(state_dim=(18, 10), action_dim=gym.action_space.n, save_dir=save_dir, load_checkpoint=None)
 
 logger = MetricLogger(save_dir)
 
