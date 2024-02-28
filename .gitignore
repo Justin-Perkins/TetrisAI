@@ -10,6 +10,4 @@
 
 *.pyc
 
-*.txt
-
 checkpoints/*
