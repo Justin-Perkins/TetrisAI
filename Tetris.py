@@ -10,7 +10,6 @@ import torch
 
 from Logging import MetricLogger
 from Agent import Agent
-from testing.dqn_agent import DQNAgent
 
 quiet = "--quiet" in sys.argv
 pyboy = PyBoy("Tetris.gb", game_wrapper=True)
@@ -28,24 +27,7 @@ print()
 save_dir = Path("checkpoints") / datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 save_dir.mkdir(parents=True)
 
-episodes = 2000
-max_steps = None
-epsilon_stop_episode = 1500
-mem_size = 20000
-discount = 0.95
-batch_size = 512
-epochs = 1
-render_every = 50
-log_every = 50
-replay_start_size = 2000
-train_every = 1
-n_neurons = [32, 32]
-render_delay = None
-activations = ['relu', 'relu', 'linear']
-agent = DQNAgent(4,
-                     n_neurons=n_neurons, activations=activations,
-                     epsilon_stop_episode=epsilon_stop_episode, mem_size=mem_size,
-                     discount=discount, replay_start_size=replay_start_size)
+agent = Agent(state_dim=(18, 10), action_dim=gym.action_space.n, save_dir=save_dir, load_checkpoint="checkpoints\\2024-02-23T12-34-15\\agent_net_12.chkpt")
 
 logger = MetricLogger(save_dir)
 
