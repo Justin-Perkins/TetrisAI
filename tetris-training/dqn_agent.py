@@ -4,6 +4,7 @@ from keras.layers import Dense # type: ignore
 from collections import deque
 import numpy as np
 import random
+import os
 
 import tensorflow as tf
 
@@ -54,6 +55,10 @@ class DQNAgent:
             replay_start_size = mem_size / 2
         self.replay_start_size = replay_start_size
         self.model = self._build_model()
+        checkpoint_path = "training_checkpoints/cp-{epoch:04d}.ckpt"
+        checkpoint_dir = os.path.dirname(checkpoint_path)
+
+
 
 
     def _build_model(self):
@@ -83,7 +88,7 @@ class DQNAgent:
 
     def predict_value(self, state):
         '''Predicts the score for a certain state'''
-        return self.model.predict(state)[0]
+        return self.model.predict(state, verbose=0)[0]
 
 
     def act(self, state):
@@ -152,3 +157,9 @@ class DQNAgent:
 
     def load(self, filename):
         self.model = tf.keras.models.load_model('my_model.keras')
+
+    def checkpoint(self, save_path):
+        self.model.save_weights(save_path)
+
+    def load_checkpoint(self, checkpoint_path):
+        self.model.load_weights(checkpoint_path)
