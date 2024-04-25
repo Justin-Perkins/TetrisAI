@@ -26,7 +26,7 @@ def dqn():
                      epsilon_stop_episode=epsilon_stop_episode, mem_size=mem_size,
                      discount=discount, replay_start_size=replay_start_size)
     
-    agent.load('my_model.keras')
+    agent.load('my_model3.keras')
     
 
     scores = []
@@ -38,7 +38,6 @@ def dqn():
 
         render = True
 
-        print(agent.next_action(current_state))
 
         # Game
         while not done and (not max_steps or steps < max_steps):
@@ -51,7 +50,7 @@ def dqn():
                     best_action = action
                     break
 
-            best_action = agent.next_action(current_state)
+            
 
             reward, done = env.play(best_action[0], best_action[1], render=render,
                                     render_delay=render_delay)

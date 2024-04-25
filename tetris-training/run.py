@@ -1,25 +1,27 @@
 
 import sys
+from pathlib import Path
 from pyboy import PyBoy
-from TetrisGym import CustomPyBoyGymEnv
 import torch
 from dqn_agent import DQNAgent
 import numpy as np
 
-from CustomTetrisWrapper import CustomPyboy
 from tetris import Tetris
 
-from logs import CustomTensorBoard
 from tqdm import tqdm
+from datetime import datetime
+
+from statistics import mean, median
+from logs import CustomTensorBoard
         
 def dqn():
     env = Tetris()
-    episodes = 2000
+    episodes = 3000
     max_steps = None
-    epsilon_stop_episode = 1500
-    mem_size = 20000
+    epsilon_stop_episode = 2000
+    mem_size = 10000
     discount = 0.95
-    batch_size = 512
+    batch_size = 128
     epochs = 1
     render_every = 50
     log_every = 50
@@ -34,14 +36,10 @@ def dqn():
                      epsilon_stop_episode=epsilon_stop_episode, mem_size=mem_size,
                      discount=discount, replay_start_size=replay_start_size)
     
-    agent.load('my_model.keras')
+    #agent.load('my_model.keras')
     
-    
-
-    
-
-    #log_dir = f'logs/tetris-nn={str(n_neurons)}-mem={mem_size}-bs={batch_size}-e={epochs}-{datetime.now().strftime("%Y%m%d-%H%M%S")}'
-    #log = CustomTensorBoard(log_dir=log_dir)
+    log_dir = f'logs/tetris-nn={str(n_neurons)}-mem={mem_size}-bs={batch_size}-e={epochs}-{datetime.now().strftime("%Y%m%d-%H%M%S")}'
+    log = CustomTensorBoard(log_dir=log_dir)
 
     scores = []
 
@@ -77,14 +75,20 @@ def dqn():
             agent.train(batch_size=batch_size, epochs=epochs)
 
         # Logs
-        #if log_every and episode and episode % log_every == 0:
-            #avg_score = mean(scores[-log_every:])
-            #min_score = min(scores[-log_every:])
-            #max_score = max(scores[-log_every:])
+        if episode % 40 == 0:
+            print("Saving checkpoint")
+            avg_score = mean(scores[-log_every:])
+            min_score = min(scores[-log_every:])
+            max_score = max(scores[-log_every:])
 
-            #log.log(episode, avg_score=avg_score, min_score=min_score,
-            #        max_score=max_score)
-    #agent.save("my_model.keras")
+            log.log(episode, avg_score=avg_score, min_score=min_score,
+                    max_score=max_score)
+            checkpoint_dir = Path("training_checkpoints5")
+            checkpoint_dir.mkdir(parents=True, exist_ok=True)
+            save_dir = checkpoint_dir / (datetime.now().strftime("%Y-%m-%dT%H-%M-%S") + ".weights.h5")
+            agent.checkpoint(save_dir)
+
+    agent.save("my_model4.keras")
 
 
 if __name__ == "__main__":
